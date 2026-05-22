@@ -1,0 +1,98 @@
+# Hermes Tool-Definitionen — einfügen in system prompt / tool-config
+# Alle Calls gehen an http://127.0.0.1:7421/
+
+tools:
+  - name: browser_navigate
+    description: |
+      Öffnet eine URL im sichtbaren Browser-Fenster.
+      Gibt Seitentitel, finale URL und HTTP-Status zurück.
+      IMMER als ersten Schritt benutzen wenn du eine Website besuchen willst.
+    endpoint: POST http://127.0.0.1:7421/navigate
+    input_schema:
+      url: string  # vollständige URL mit https://
+
+  - name: browser_screenshot
+    description: |
+      Macht einen Screenshot des aktuellen Browser-Fensters.
+      Gibt base64-JPEG zurück. Benutze dies um zu sehen was gerade auf der Seite ist,
+      bevor du clickst oder Text liest. Besonders wichtig bei dynamischen Seiten (SPAs).
+    endpoint: GET http://127.0.0.1:7421/screenshot
+
+  - name: browser_get_text
+    description: |
+      Liest den sichtbaren Text eines Elements oder der ganzen Seite.
+      selector: CSS-Selektor, default 'body' für die ganze Seite.
+      Gecappt bei 8000 Zeichen.
+    endpoint: POST http://127.0.0.1:7421/get_text
+    input_schema:
+      selector: string  # default: 'body'
+
+  - name: browser_click
+    description: |
+      Klickt auf ein Element. method wählen:
+      - 'css': Standard CSS-Selektor (z.B. 'button#submit')
+      - 'text': Klickt auf Element mit diesem sichtbaren Text
+      - 'role': Format 'rolle:name' z.B. 'button:Senden'
+    endpoint: POST http://127.0.0.1:7421/click
+    input_schema:
+      selector: string
+      method: "css" | "text" | "role"  # default: css
+
+  - name: browser_type
+    description: |
+      Schreibt Text in ein Input-Feld (CSS-Selektor).
+      clear_first=true löscht vorhandenen Inhalt.
+      Tipp: Danach oft browser_click auf Submit oder '\n' in text übergeben.
+    endpoint: POST http://127.0.0.1:7421/type
+    input_schema:
+      selector: string
+      text: string
+      clear_first: boolean  # default: true
+
+  - name: browser_scroll
+    description: |
+      Scrollt die Seite. direction: 'up'|'down'|'top'|'bottom'. amount in Pixel.
+    endpoint: POST http://127.0.0.1:7421/scroll
+    input_schema:
+      direction: string   # default: down
+      amount: integer     # default: 500
+
+  - name: browser_wait
+    description: |
+      Wartet X Millisekunden. Nach Navigationen oder Klicks auf SPAs wie Perplexity
+      immer warten! Empfehlung: 1500-3000ms nach Navigation, 500ms nach Klick.
+    endpoint: POST http://127.0.0.1:7421/wait
+    input_schema:
+      ms: integer  # default: 1000
+
+  - name: browser_eval
+    description: |
+      Führt JavaScript direkt auf der Seite aus.
+      Gibt den Return-Wert als String zurück.
+      Benutze für komplexe Interaktionen die kein Selektor-Click abdeckt.
+    endpoint: POST http://127.0.0.1:7421/eval
+    input_schema:
+      script: string  # JS expression z.B. 'document.title'
+
+  - name: browser_keyboard
+    description: |
+      Drückt eine Taste. key: z.B. 'Enter', 'Escape', 'Tab', 'ArrowDown'.
+    endpoint: POST http://127.0.0.1:7421/keyboard
+    input_schema:
+      key: string
+
+  - name: browser_close
+    description: Schließt den Browser. Am Ende einer Aufgabe aufrufen.
+    endpoint: POST http://127.0.0.1:7421/close
+
+  - name: perplexity_ask
+    description: |
+      Stellt eine Frage direkt über die Perplexity Auth2API Bridge (kein Browser nötig).
+      Schneller als der Browser-Weg. Nutzt deine Perplexity-Session.
+      model: 'sonar' (schnell) | 'sonar-pro' (besser) | 'sonar-reasoning' (CoT)
+    endpoint: POST http://127.0.0.1:8319/v1/chat/completions
+    auth: Bearer {PPLX_API_KEY}
+    input_schema:
+      model: string
+      messages: [{role: user, content: string}]
+      stream: boolean

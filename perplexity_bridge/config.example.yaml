@@ -1,0 +1,14 @@
+host: "127.0.0.1"
+port: 8319
+
+auth-dir: "~/.perplexity-auth2api"
+
+api-keys:
+  - "ppx-DEIN-KEY-HIER-ERSETZEN"
+
+# false = Browser sichtbar (empfohlen für ersten Login)
+# true  = headless (für spätere Auto-Refreshes)
+headless: false
+
+# off | errors | verbose
+debug: "errors"
